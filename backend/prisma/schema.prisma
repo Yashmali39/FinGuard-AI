@@ -25,17 +25,204 @@ enum Department {
   COMPLIANCE
 }
 
-model User {
-  id          String      @id @default(cuid())
-  userId      String      @unique
-  name        String
-  email       String      @unique
-  password    String
-  role        Role
-  department  Department
-  isActive    Boolean     @default(true)
-  lastLogin   DateTime?
+enum TransactionStatus {
+  PENDING
+  OTP_REQUIRED
+  UNDER_REVIEW
+  COMPLETED
+  REJECTED
+}
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+enum TransactionType {
+  UPI
+  IMPS
+  NEFT
+  RTGS
+  CARD
+}
+
+enum AlertStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  FALSE_POSITIVE
+}
+
+enum FraudCaseStatus {
+  OPEN
+  UNDER_INVESTIGATION
+  CONFIRMED_FRAUD
+  CLOSED
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Prediction {
+  SAFE
+  SUSPICIOUS
+  FRAUD
+}
+
+enum AlertSource {
+  AI_MODEL
+  RULE_ENGINE
+}
+
+model User {
+  id         String     @id @default(cuid())
+  userId     String     @unique
+  name       String
+  email      String     @unique
+  password   String
+  role       Role
+  department Department
+  isActive   Boolean    @default(true)
+  lastLogin  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  investigationNotes InvestigationNote[]
+  fraudCases         FraudCase[]         @relation("AssignedFraudCases")
+  alerts             Alert[]             @relation("AssignedAlerts")
+}
+
+model Transaction {
+  id              String @id @default(cuid())
+  transactionId   String @unique
+  referenceNumber String @unique
+
+  senderAccountNumber   String
+  receiverAccountNumber String
+
+  amount   Decimal
+  currency String  @default("INR")
+
+  transactionType TransactionType
+
+  deviceId   String
+  deviceType String
+
+  ipAddress String
+
+  city    String
+  state   String
+  country String
+
+  status TransactionStatus
+
+  riskAssessment RiskAssessment?
+
+  alerts Alert[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RiskAssessment {
+  id String @id @default(cuid())
+
+  transactionId String      @unique
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+
+  riskScore    Int
+  prediction   Prediction
+  confidence   Float
+  modelVersion String
+  explanation  String
+  evaluatedAt  DateTime   @default(now())
+
+  @@index([riskScore])
+  @@index([prediction])
+}
+
+model Alert {
+  id String @id @default(cuid())
+
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedAlerts", fields: [assignedToId], references: [id])
+
+  severity Severity
+
+  status AlertStatus @default(OPEN)
+
+  generatedBy AlertSource
+
+  reason String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fraudCase FraudCase?
+
+  @@index([status])
+  @@index([severity])
+  @@index([assignedToId])
+}
+
+model FraudCase {
+  id String @id @default(cuid())
+
+  caseNumber String @unique
+
+  alertId String @unique
+  alert   Alert  @relation(fields: [alertId], references: [id])
+
+  assignedToId String
+  assignedTo   User   @relation("AssignedFraudCases", fields: [assignedToId], references: [id])
+
+  priority Priority
+
+  status FraudCaseStatus @default(OPEN)
+
+  description String
+
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  investigationNotes InvestigationNote[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([openedAt])
+}
+
+model InvestigationNote {
+  id String @id @default(cuid())
+
+  fraudCaseId String
+  fraudCase   FraudCase @relation(fields: [fraudCaseId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  content String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fraudCaseId])
+  @@index([userId])
 }
