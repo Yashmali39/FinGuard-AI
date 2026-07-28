@@ -1,11 +1,13 @@
 import express from "express";
-import dotenv from "dotenv";
+import env from "./config/env.js";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import errorHandler from "./middleware/errorHandler.js";
+import authRouter from "./modules/auth/auth.routes.js";
+import userRouter from "./modules/users/user.routes.js";
 
-dotenv.config();
 
 const app = express();
 
@@ -13,10 +15,11 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: env.CLIENT_URL,
     credentials: true,
   })
 );
+
 
 app.use(cookieParser());
 app.use(helmet());
@@ -28,5 +31,11 @@ app.get("/", (req, res) => {
         message: "FinGuard AI Backend Running"
     });
 });
+
+app.use("/api/auth", authRouter);
+
+app.use("/api/users", userRouter);
+
+app.use(errorHandler);
 
 export default app;

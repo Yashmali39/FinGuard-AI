@@ -12,3 +12,30 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  ADMIN
+  MANAGER
+  ANALYST
+}
+
+enum Department {
+  FRAUD_INVESTIGATION
+  RISK_MANAGEMENT
+  COMPLIANCE
+}
+
+model User {
+  id          String      @id @default(cuid())
+  userId      String      @unique
+  name        String
+  email       String      @unique
+  password    String
+  role        Role
+  department  Department
+  isActive    Boolean     @default(true)
+  lastLogin   DateTime?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
