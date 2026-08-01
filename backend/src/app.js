@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/errorHandler.js";
 import authRouter from "./modules/auth/auth.routes.js";
 import userRouter from "./modules/users/user.routes.js";
+import transactionRouter from "./modules/transaction/transaction.route.js";
 
 
 const app = express();
@@ -35,6 +36,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter);
 
 app.use("/api/users", userRouter);
+
+app.use("/api/v1/transactions", transactionRouter);
 
 app.use(errorHandler);
 
