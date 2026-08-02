@@ -8,6 +8,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import authRouter from "./modules/auth/auth.routes.js";
 import userRouter from "./modules/users/user.routes.js";
 import transactionRouter from "./modules/transaction/transaction.route.js";
+import dashboardRouter from "./modules/dashboard/dashboard.routes.js";
 
 
 const app = express();
@@ -38,6 +39,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 
 app.use("/api/v1/transactions", transactionRouter);
+
+app.use("/api/dashboard", dashboardRouter);
 
 app.use(errorHandler);
 
